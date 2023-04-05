@@ -1,41 +1,18 @@
-import { createServer, IncomingMessage, RequestListener, Server } from 'http';
+import { createServer, RequestListener, Server } from 'http';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
-import { blue, blueBright, green, greenBright, redBright, reset, yellowBright } from 'colorette'
+import { blueBright, redBright, yellowBright } from 'colorette'
 import { log } from './logger';
-
-export interface YetOptions {
-  port: number;
-}
-
-export interface Response {
-  status: number;
-  body: any;
-}
-
-export type RouteHandler = (req: IncomingMessage) => Promise<Response>;
-
-export type Route = () => {
-  handler: RouteHandler;
-}
+import { RouteMetadata, YetOptions } from './models';
+import { Status } from './models/status-codes';
 
 const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
-interface RouteMetadata {
-  pathname: string;
-  method: string;
-  handler: {
-    default?: () => {
-      handler: RouteHandler;
-    };
-  };
-}
-
 class Yet {
 
-  server?: Server;
-  options?: YetOptions;
-  routes: RouteMetadata[] = [];
+  private server?: Server;
+  private options?: YetOptions;
+  private routes: RouteMetadata[] = [];
 
   constructor(options: YetOptions) {
     this.setupRoutes().then(() => {
@@ -54,14 +31,14 @@ class Yet {
 
     const routeMetadata = this.routes.find(x => x.pathname === url && x.method.toLowerCase() === req.method?.toLowerCase());
     if (!routeMetadata) {
-      res.writeHead(500);
+      res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('The requested resource does not exist');
       res.end();
       return;
     }
 
     if (!routeMetadata.handler.default) {
-      res.writeHead(500);
+      res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('Unexpected error');
       res.end();
       return;
@@ -109,16 +86,16 @@ class Yet {
     const max = Math.max(...this.routes.map(x => x.method.length));
     for (const route of this.routes) {
       let method = route.method;
-      for (let i = 0; i < max - method.length; i++) {
-        method += ' ';
-      }
+      // for (let i = 0; i < max - method.length; i++) {
+      //   method += ' ';
+      // }
       log(`${route.handler.default ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
     }
   }
 
   private async registerRoute(path: string): Promise<void> {
     const split = path.split('\\');
-    let pathnames = [];
+    let splittedPathname = [];
 
     let current = path;
     let method = '';
@@ -131,17 +108,22 @@ class Yet {
       if (pop.includes('.ts') || pop.includes('.js')) {
         method = pop.split('.')[0] as string;
       } else {
-        pathnames.push(pop);
+        splittedPathname.push(pop);
       }
 
       current = pop;
     }
 
-    pathnames.pop();
-    pathnames = pathnames.reverse();
-    const pathname = `/${pathnames.join('/')}`;
+    splittedPathname.pop();
+    splittedPathname = splittedPathname.reverse();
+    const pathname = `/${splittedPathname.join('/')}`;
 
-    const handler = (await import('file://' + path)).default;
+    let handler;
+    if (typeof require !== "undefined" && typeof __dirname !== "undefined") {
+      handler = require(path);
+    } else {
+      handler = (await import('file://' + path)).default;
+    }
 
     this.routes.push({
       pathname,
