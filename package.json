@@ -1,6 +1,6 @@
 {
-  "name": "yet",
-  "description": "yet another framework",
+  "name": "intenso",
+  "description": "yet another blazing fast web framework",
   "version": "0.0.1",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

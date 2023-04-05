@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 
-export interface YetOptions {
+export interface IntensoOptions {
   port: number;
 }
 

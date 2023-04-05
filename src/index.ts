@@ -1,23 +1,23 @@
-import { createServer, RequestListener, Server } from 'http';
+import { createServer as httpCreateServer, RequestListener, Server } from 'http';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { blueBright, redBright, yellowBright } from 'colorette'
 import { log } from './logger';
-import { RouteMetadata, YetOptions } from './models';
+import { RouteMetadata, IntensoOptions } from './models';
 import { Status } from './models/status-codes';
 
 const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
-class Yet {
+class Intenso {
 
   private server?: Server;
-  private options?: YetOptions;
+  private options?: IntensoOptions;
   private routes: RouteMetadata[] = [];
 
-  constructor(options: YetOptions) {
+  constructor(options: IntensoOptions) {
     this.setupRoutes().then(() => {
       this.options = options;
-      this.server = createServer(this.listener);
+      this.server = httpCreateServer(this.listener);
 
       this.server.listen(options.port, () => {
         log(`Listening on :${yellowBright(options.port)}`);
@@ -151,6 +151,6 @@ class Yet {
 
 }
 
-export function createYet(options: YetOptions): Yet {
-  return new Yet(options);
+export function createServer(options: IntensoOptions): Intenso {
+  return new Intenso(options);
 }
