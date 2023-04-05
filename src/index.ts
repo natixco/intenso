@@ -46,7 +46,7 @@ class Yet {
 
     try {
       const response = await routeMetadata.handler.default().handler(req);
-      const headers: Record<string, string> = {};
+      const headers: Record<string, string> = response.headers ?? {};
       let body = response.body;
 
       if (typeof response.body === 'object') {

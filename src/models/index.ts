@@ -7,6 +7,7 @@ export interface YetOptions {
 export interface Response {
   status: number;
   body: any;
+  headers?: Record<string, string>;
 }
 
 export type RouteHandler = (req: IncomingMessage) => Promise<Response>;
