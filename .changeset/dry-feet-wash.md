@@ -1,5 +1,0 @@
----
-"intenso": patch
----
-
-added npmignore
