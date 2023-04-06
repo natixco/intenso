@@ -5,10 +5,31 @@ import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { blueBright, redBright, yellowBright } from 'colorette'
 import { log } from './logger';
-import { RouteMetadata, IntensoOptions } from './models';
-import { Status } from './models';
+import { IntensoOptions, ParsedUrl, RouteMetadata, Status } from './models';
 
 const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
+
+function parseUrl(url: string = ''): ParsedUrl {
+  url = url.length > 1 && url.charAt(url.length - 1) === '/' ? url.slice(0, -1) : url;
+  const splitUrl = url.split('?');
+
+  const pathname = splitUrl[0] ?? '';
+  const query = splitUrl[1] ?? '';
+
+  const queryParams: Record<string, any> = {};
+  for (const param of query.split('&')) {
+    const [key, value] = param.split('=');
+    if (!key || !value) {
+      continue;
+    }
+    queryParams[key] = decodeURIComponent(value);
+  }
+
+  return {
+    pathname,
+    queryParams,
+  };
+}
 
 class Intenso {
 
@@ -28,10 +49,9 @@ class Intenso {
   }
 
   private listener: RequestListener = async (req, res) => {
-    let url = req.url ?? '';
-    url = url.length > 1 && url.charAt(url.length - 1) === '/' ? url.slice(0, -1) : url;
+    const { pathname, queryParams } = parseUrl(req.url);
 
-    const routeMetadata = this.routes.find(x => x.pathname === url && x.method.toLowerCase() === req.method?.toLowerCase());
+    const routeMetadata = this.routes.find(x => x.pathname === pathname && x.method.toLowerCase() === req.method?.toLowerCase());
     if (!routeMetadata) {
       res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('The requested resource does not exist');
@@ -47,7 +67,11 @@ class Intenso {
     }
 
     try {
-      const response = await routeMetadata.handler.default().handler(req);
+      const response = await routeMetadata.handler.default().handler({
+        incomingMessage: req,
+        queryParams,
+        body: undefined,
+      });
       const headers: Record<string, string> = response.headers ?? {};
       let body = response.body;
 
@@ -97,7 +121,7 @@ class Intenso {
 
   private async registerRoute(path: string): Promise<void> {
     const split = path.split('\\');
-    let splittedPathname = [];
+    let splitPathname = [];
 
     let current = path;
     let method = '';
@@ -110,18 +134,18 @@ class Intenso {
       if (pop.includes('.ts') || pop.includes('.js')) {
         method = pop.split('.')[0] as string;
       } else {
-        splittedPathname.push(pop);
+        splitPathname.push(pop);
       }
 
       current = pop;
     }
 
-    splittedPathname.pop();
-    splittedPathname = splittedPathname.reverse();
-    const pathname = `/${splittedPathname.join('/')}`;
+    splitPathname.pop();
+    splitPathname = splitPathname.reverse();
+    const pathname = `/${splitPathname.join('/')}`;
 
     let handler;
-    if (typeof require !== "undefined" && typeof __dirname !== "undefined") {
+    if (typeof require !== 'undefined' && typeof __dirname !== 'undefined') {
       handler = require(path);
     } else {
       handler = (await import('file://' + path)).default;
