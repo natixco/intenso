@@ -6,7 +6,7 @@ import { join } from 'path';
 import { blueBright, redBright, yellowBright } from 'colorette'
 import { log } from './logger';
 import { RouteMetadata, IntensoOptions } from './models';
-import { Status } from './models/status-codes';
+import { Status } from './models';
 
 const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
 
