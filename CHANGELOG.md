@@ -1,5 +1,11 @@
 # intenso
 
+## 0.0.4
+
+### Patch Changes
+
+- 4049607: typing fixes and example project setup
+
 ## 0.0.3
 
 ### Patch Changes
