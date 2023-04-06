@@ -1,3 +1,5 @@
+export * from './status-codes';
+
 import { IncomingMessage } from 'http';
 
 export interface IntensoOptions {
