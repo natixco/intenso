@@ -1,35 +1,14 @@
 export * from './models';
 
+import { parseBody, parseUrl } from './helpers';
 import { createServer as httpCreateServer, RequestListener, Server } from 'http';
 import { existsSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { blueBright, redBright, yellowBright } from 'colorette'
 import { log } from './logger';
-import { IntensoOptions, ParsedUrl, RouteMetadata, Status } from './models';
+import { IntensoOptions, RouteMetadata, Status } from './models';
 
 const methods = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options'];
-
-function parseUrl(url: string = ''): ParsedUrl {
-  url = url.length > 1 && url.charAt(url.length - 1) === '/' ? url.slice(0, -1) : url;
-  const splitUrl = url.split('?');
-
-  const pathname = splitUrl[0] ?? '';
-  const query = splitUrl[1] ?? '';
-
-  const queryParams: Record<string, any> = {};
-  for (const param of query.split('&')) {
-    const [key, value] = param.split('=');
-    if (!key || !value) {
-      continue;
-    }
-    queryParams[key] = decodeURIComponent(value);
-  }
-
-  return {
-    pathname,
-    queryParams,
-  };
-}
 
 class Intenso {
 
@@ -59,7 +38,8 @@ class Intenso {
       return;
     }
 
-    if (!routeMetadata.handler.default) {
+    const handlerDefault = routeMetadata.handler.default;
+    if (!handlerDefault) {
       res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('Unexpected error');
       res.end();
@@ -67,11 +47,14 @@ class Intenso {
     }
 
     try {
-      const response = await routeMetadata.handler.default().handler({
+      const _default = handlerDefault();
+      const parsedStringBody = await parseBody(req);
+      const response = await _default.handler({
         incomingMessage: req,
-        queryParams,
-        body: undefined,
+        query: _default.queryParser ? _default.queryParser(queryParams) : queryParams,
+        body: _default.bodyParser ? _default.bodyParser(parsedStringBody) : parsedStringBody,
       });
+
       const headers: Record<string, string> = response.headers ?? {};
       let body = response.body;
 

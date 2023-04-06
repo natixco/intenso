@@ -11,10 +11,10 @@ export interface ParsedUrl {
   queryParams: Record<string, any>;
 }
 
-export interface Request {
+export interface Request<TQuery, TBody> {
   incomingMessage: IncomingMessage;
-  queryParams: Record<string, any>;
-  body: any;
+  query: TQuery;
+  body: TBody;
 }
 
 export interface Response {
@@ -23,18 +23,18 @@ export interface Response {
   headers?: Record<string, string>;
 }
 
-export type RouteHandler = (request: Request) => Promise<Response>;
+export type RouteHandler<TQuery, TBody> = (request: Request<TQuery, TBody>) => Promise<Response>;
 
-export type Route = () => {
-  handler: RouteHandler;
+export type Route<TQuery = Record<string, any>, TBody = unknown> = () => {
+  queryParser?: (params: Record<string, any>) => TQuery;
+  bodyParser?: (body: any) => TBody;
+  handler: RouteHandler<TQuery, TBody>;
 }
 
 export interface RouteMetadata {
   pathname: string;
   method: string;
   handler: {
-    default?: () => {
-      handler: RouteHandler;
-    };
+    default?: () => ReturnType<Route>;
   };
 }
