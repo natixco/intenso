@@ -1,40 +1,45 @@
 {
   "name": "intenso",
   "description": "yet another blazing fast web framework",
+  "author": "natixco",
+  "license": "MIT",
   "version": "0.0.2",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "keywords": [
+    "web",
+    "http",
+    "rest",
+    "router",
+    "framework"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "exports": {
-    "types": "./build/types/**/*.d.ts",
-    "require": "./build/cjs/index.js",
-    "import": "./build/esm/index.js",
-    "default": "./build/esm/index.js"
+    ".": {
+      "require": "./build/cjs/index.js",
+      "import": "./build/esm/index.js",
+      "types": "./build/index.d.ts"
+    }
   },
+  "files": [
+    "build"
+  ],
   "scripts": {
-    "dev": "nodemon --watch src --watch test -e ts --exec \"npm run build && ts-node ./test/index.ts\"",
-    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json ./tsconfig.types.json",
+    "compile": "tsc -b ./tsconfig.cjs.json ./tsconfig.esm.json",
     "build": "npm-run-all compile && node ./scripts/prepare-package-json",
-    "release": "npm run build && changeset publish",
+    "build:defs": "tsc --declaration --outFile ./build/index.d.ts --emitDeclarationOnly",
+    "release": "npm run build && npm run build:defs && changeset publish",
     "lint": "tsc",
     "changeset": "changeset"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.26.0",
     "@types/node": "^18.15.11",
     "nodemon": "^2.0.22",
     "npm-run-all": "^4.1.5",
-    "typescript": "^4.9.4",
-    "@changesets/cli": "^2.26.0"
+    "typescript": "^4.9.4"
   },
-  "author": "natixco",
-  "license": "MIT",
   "dependencies": {
     "colorette": "^2.0.19"
-  },
-  "files": [
-    "build"
-  ]
+  }
 }
