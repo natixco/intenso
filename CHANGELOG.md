@@ -1,5 +1,11 @@
 # intenso
 
+## 0.0.5
+
+### Patch Changes
+
+- 9c82559: added request query params and body parsing
+
 ## 0.0.4
 
 ### Patch Changes
