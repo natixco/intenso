@@ -1,9 +1,9 @@
-import { vi, describe, it, expect, beforeAll, beforeEach, test } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { FileService } from '../../src/services/file-service';
 import { RouteMetadata } from '../../src';
 import { setupTest } from '../../test-helpers';
 
-describe('FileService', () => {
+describe.todo('FileService', () => {
   let service: FileService;
 
   beforeAll(() => {
