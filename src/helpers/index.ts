@@ -2,11 +2,12 @@ import { ParsedUrl } from '../models';
 import { IncomingMessage } from 'http';
 
 export function parseUrl(url: string = ''): ParsedUrl {
-  url = url.length > 1 && url.charAt(url.length - 1) === '/' ? url.slice(0, -1) : url;
   const splitUrl = url.split('?');
 
-  const pathname = splitUrl[0] ?? '';
+  let pathname = splitUrl[0] ?? '';
   const query = splitUrl[1] ?? '';
+
+  pathname = pathname.length > 1 && pathname.charAt(pathname.length - 1) === '/' ? pathname.slice(0, -1) : pathname;
 
   const queryParams: Record<string, any> = {};
   for (const param of query.split('&')) {

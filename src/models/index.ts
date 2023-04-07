@@ -1,4 +1,7 @@
+import { Method } from './methods';
+
 export * from './status-codes';
+export { Method } from './methods';
 
 import { IncomingMessage } from 'http';
 
@@ -33,7 +36,7 @@ export type Route<TQuery = Record<string, any>, TBody = unknown> = () => {
 
 export interface RouteMetadata {
   pathname: string;
-  method: string;
+  method: Method;
   handler: {
     default?: () => ReturnType<Route>;
   };
