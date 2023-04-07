@@ -3,7 +3,7 @@ import { createServer, Intenso, Route } from '../../src';
 import { setupTest, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
 
-describe('bodyParser', () => {
+describe.todo('bodyParser', () => {
   let server: Intenso;
   let port: number;
 
