@@ -84,6 +84,20 @@ export class Intenso {
         body: routeMetadata.bodyParser ? routeMetadata.bodyParser(parsedStringBody) : parsedStringBody,
       });
 
+      if ('destination' in response) {
+        let status: Status;
+        if (response.status) {
+          status = response.status;
+        } else {
+          status = response.permanent ? Status.MOVED_PERMANENTLY : Status.MOVED_TEMPORARILY;
+        }
+
+        res.writeHead(status, { Location: response.destination });
+        res.write('');
+        res.end();
+        return;
+      }
+
       const headers: Record<string, string> = response.headers ?? {};
       let body = response.body;
 

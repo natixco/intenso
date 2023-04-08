@@ -4,6 +4,7 @@ export * from './status-codes';
 export { Method } from './methods';
 
 import { IncomingMessage } from 'http';
+import { Status } from './status-codes';
 
 export interface IntensoOptions {
   port: number;
@@ -24,9 +25,27 @@ export interface Response {
   status: number;
   body: any;
   headers?: Record<string, string>;
+  destination?: never;
+  permanent?: never;
 }
 
-export type RouteHandler<TQuery, TBody> = (request: Request<TQuery, TBody>) => Promise<Response>;
+export interface RedirectWithPermanent {
+  destination: string;
+  permanent: boolean;
+  status?: never;
+}
+
+export interface RedirectWithStatus {
+  destination: string;
+  permanent?: never;
+  status: Status;
+}
+
+export type Redirect = RedirectWithPermanent | RedirectWithStatus;
+
+export type RouteHandlerResult = Response | Redirect;
+
+export type RouteHandler<TQuery, TBody> = (request: Request<TQuery, TBody>) => RouteHandlerResult | Promise<RouteHandlerResult>;
 
 export type QueryParser<T> = (params: Record<string, any>) => T;
 

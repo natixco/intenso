@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createServer, Intenso } from '../../src';
+import { createServer, Intenso, Status } from '../../src';
 import { setupTest, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
 
@@ -40,6 +40,36 @@ describe('routes', () => {
             };
           }
         },
+        {
+          pathname: '/should-redirect-with-permanent',
+          method: 'get',
+          handler: () => {
+            return {
+              destination: '/should-redirect-to',
+              permanent: false,
+            };
+          }
+        },
+        {
+          pathname: '/should-redirect-with-status',
+          method: 'get',
+          handler: () => {
+            return {
+              destination: '/should-redirect-to',
+              status: Status.MOVED_TEMPORARILY
+            };
+          }
+        },
+        {
+          pathname: '/should-redirect-to',
+          method: 'get',
+          handler: () => {
+            return {
+              status: 200,
+              body: 'ok',
+            };
+          }
+        }
       ]
     });
 
@@ -92,6 +122,44 @@ describe('routes', () => {
 
     it('response should have the correct body', async () => {
       expect(await res.text()).toEqual('ok from POST /sub');
+    });
+  });
+
+  describe('route: GET /should-redirect-with-permanent', async () => {
+    let res: Response;
+    beforeEach(async () => {
+      res = await testRequest(port, '/should-redirect-with-permanent', 'get');
+    });
+
+    it('response should have the correct status', () => {
+      expect(res.status).toEqual(200);
+    });
+
+    it('response should have the correct body', async () => {
+      expect(await res.text()).toEqual('ok');
+    });
+
+    it('response should have the correct url', () => {
+      expect(res.url).toEqual(`http://localhost:${port}/should-redirect-to`);
+    });
+  });
+
+  describe('route: GET /should-redirect-with-status', async () => {
+    let res: Response;
+    beforeEach(async () => {
+      res = await testRequest(port, '/should-redirect-with-status', 'get');
+    });
+
+    it('response should have the correct status', () => {
+      expect(res.status).toEqual(200);
+    });
+
+    it('response should have the correct body', async () => {
+      expect(await res.text()).toEqual('ok');
+    });
+
+    it('response should have the correct url', () => {
+      expect(res.url).toEqual(`http://localhost:${port}/should-redirect-to`);
     });
   });
 
