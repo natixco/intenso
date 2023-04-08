@@ -1,5 +1,12 @@
 # intenso
 
+## 0.0.6
+
+### Patch Changes
+
+- e86cfb2: added the possibility of redirection to routes
+- 7c06d62: refactored the route loading and handling, so it should be a bit faster
+
 ## 0.0.5
 
 ### Patch Changes
