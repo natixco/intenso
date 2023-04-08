@@ -28,16 +28,20 @@ export interface Response {
 
 export type RouteHandler<TQuery, TBody> = (request: Request<TQuery, TBody>) => Promise<Response>;
 
+export type QueryParser<T> = (params: Record<string, any>) => T;
+
+export type BodyParser<T> = (body: any) => T;
+
 export type Route<TQuery = Record<string, any>, TBody = unknown> = () => {
-  queryParser?: (params: Record<string, any>) => TQuery;
-  bodyParser?: (body: any) => TBody;
+  queryParser?: QueryParser<TQuery>;
+  bodyParser?: BodyParser<TBody>;
   handler: RouteHandler<TQuery, TBody>;
 }
 
 export interface RouteMetadata {
   pathname: string;
   method: Method;
-  handler: {
-    default?: () => ReturnType<Route>;
-  };
+  queryParser?: QueryParser<any>;
+  bodyParser?: BodyParser<any>;
+  handler?: RouteHandler<any, any>;
 }

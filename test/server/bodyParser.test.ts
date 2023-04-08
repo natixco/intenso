@@ -13,23 +13,17 @@ describe.todo('bodyParser', () => {
         {
           pathname: '/',
           method: 'post',
-          handler: {
-            default() {
-              return {
-                bodyParser(body) {
-                  if (body.id) {
-                    body.id = Number(body.id) + 1;
-                  }
-                  return body;
-                },
-                async handler({ body }: any) {
-                  return {
-                    status: 200,
-                    body: `ok from GET / id: ${body.id}`
-                  };
-                }
-              };
+          bodyParser(body) {
+            if (body.id) {
+              body.id = Number(body.id) + 1;
             }
+            return body;
+          },
+          handler: async ({ body }) => {
+            return {
+              status: 200,
+              body: `ok from GET / id: ${body.id}`
+            };
           }
         },
       ]

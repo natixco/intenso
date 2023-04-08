@@ -1,4 +1,4 @@
-import { Method, RouteMetadata } from '../models';
+import { Method, Route, RouteMetadata } from '../models';
 import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { methods } from '../models/methods';
@@ -55,11 +55,14 @@ export class FileService {
     const pathname = `/${splitPathname.join('/')}`;
 
     let handler = await this.loadHandler(path);
+    const _default = (handler.default ? handler.default() : undefined) as ReturnType<Route> | undefined;
 
     return {
       pathname,
       method,
-      handler,
+      handler: _default?.handler,
+      queryParser: _default?.queryParser,
+      bodyParser: _default?.bodyParser,
     };
   }
 

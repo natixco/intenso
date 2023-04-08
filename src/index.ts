@@ -69,8 +69,7 @@ export class Intenso {
       return;
     }
 
-    const handlerDefault = routeMetadata.handler.default;
-    if (!handlerDefault) {
+    if (!routeMetadata.handler) {
       res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('Unexpected error');
       res.end();
@@ -78,12 +77,11 @@ export class Intenso {
     }
 
     try {
-      const _default = handlerDefault();
       const parsedStringBody = await parseBody(req);
-      const response = await _default.handler({
+      const response = await routeMetadata.handler({
         incomingMessage: req,
-        query: _default.queryParser ? _default.queryParser(queryParams) : queryParams,
-        body: _default.bodyParser ? _default.bodyParser(parsedStringBody) : parsedStringBody,
+        query: routeMetadata.queryParser ? routeMetadata.queryParser(queryParams) : queryParams,
+        body: routeMetadata.bodyParser ? routeMetadata.bodyParser(parsedStringBody) : parsedStringBody,
       });
 
       const headers: Record<string, string> = response.headers ?? {};
@@ -125,7 +123,7 @@ export class Intenso {
 
     for (const route of this.routes) {
       let method = route.method;
-      log(`${route.handler.default ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
+      log(`${route.handler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
     }
   }
 

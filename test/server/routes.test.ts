@@ -13,49 +13,31 @@ describe('routes', () => {
         {
           pathname: '/',
           method: 'get',
-          handler: {
-            default() {
-              return {
-                async handler() {
-                  return {
-                    status: 200,
-                    body: 'ok from GET /'
-                  };
-                }
-              };
-            }
+          handler: async () => {
+            return {
+              status: 200,
+              body: 'ok from GET /'
+            };
           }
         },
         {
           pathname: '/sub',
           method: 'get',
-          handler: {
-            default() {
-              return {
-                async handler() {
-                  return {
-                    status: 200,
-                    body: 'ok from GET /sub'
-                  };
-                }
-              };
-            }
+          handler: async () => {
+            return {
+              status: 200,
+              body: 'ok from GET /sub'
+            };
           }
         },
         {
           pathname: '/sub',
           method: 'post',
-          handler: {
-            default() {
-              return {
-                async handler() {
-                  return {
-                    status: 201,
-                    body: 'ok from POST /sub'
-                  };
-                }
-              };
-            }
+          handler: async () => {
+            return {
+              status: 201,
+              body: 'ok from POST /sub'
+            };
           }
         },
       ]

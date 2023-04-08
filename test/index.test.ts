@@ -60,41 +60,29 @@ describe('index tests with the same server', () => {
         {
           pathname: '/route-without-handler',
           method: 'get',
-          handler: {}
+          handler: undefined
         },
         {
           pathname: '/json-response',
           method: 'get',
-          handler: {
-            default() {
-              return {
-                async handler() {
-                  return {
-                    status: 200,
-                    body: {
-                      x: 123,
-                    }
-                  };
-                }
-              };
-            }
+          handler: async () => {
+            return {
+              status: 200,
+              body: {
+                x: 123,
+              }
+            };
           }
         },
         {
           pathname: '/error',
           method: 'get',
-          handler: {
-            default() {
-              return {
-                async handler() {
-                  throw new Error('error :(')
-                  return {
-                    status: 200,
-                    body: ''
-                  };
-                }
-              };
-            }
+          handler: async () => {
+            throw new Error('error :(')
+            return {
+              status: 200,
+              body: ''
+            };
           }
         }
       ]

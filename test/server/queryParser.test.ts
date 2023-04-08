@@ -13,23 +13,17 @@ describe('queryParser', () => {
         {
           pathname: '/',
           method: 'get',
-          handler: {
-            default() {
-              return {
-                queryParser(query) {
-                  if (query.id) {
-                    query.id = Number(query.id) + 1;
-                  }
-                  return query;
-                },
-                async handler({ query }) {
-                  return {
-                    status: 200,
-                    body: `ok from GET / id: ${query.id}`
-                  };
-                }
-              };
+          queryParser(query) {
+            if (query.id) {
+              query.id = Number(query.id) + 1;
             }
+            return query;
+          },
+          handler: async ({ query }) => {
+            return {
+              status: 200,
+              body: `ok from GET / id: ${query.id}`
+            };
           }
         },
       ]
