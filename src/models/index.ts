@@ -1,10 +1,10 @@
 import { Method } from './methods';
+import { IncomingMessage, ServerResponse } from 'http';
+import { Status } from './status-codes';
+import { z, ZodTypeAny } from 'zod';
 
 export * from './status-codes';
 export { Method } from './methods';
-
-import { IncomingMessage } from 'http';
-import { Status } from './status-codes';
 
 export interface IntensoOptions {
   port: number;
@@ -15,10 +15,10 @@ export interface ParsedUrl {
   queryParams: Record<string, any>;
 }
 
-export interface Request<TQuery, TBody> {
+export interface Request<TQUery extends ZodTypeAny, TBody extends ZodTypeAny> {
   incomingMessage: IncomingMessage;
-  query: TQuery;
-  body: TBody;
+  query: z.infer<TQUery>;
+  body: z.infer<TBody>;
 }
 
 export interface Response {
@@ -45,22 +45,22 @@ export type Redirect = RedirectWithPermanent | RedirectWithStatus;
 
 export type RouteHandlerResult = Response | Redirect;
 
-export type RouteHandler<TQuery, TBody> = (request: Request<TQuery, TBody>) => RouteHandlerResult | Promise<RouteHandlerResult>;
+export type RouteHandler = (request: IncomingMessage, res: ServerResponse & { req: IncomingMessage }, queryParams: any) => void | Promise<void>;
 
-export type QueryParser<T> = (params: Record<string, any>) => T;
+export type QueryParser<T extends ZodTypeAny> = (validator: typeof z) => z.infer<T>;
 
-export type BodyParser<T> = (body: any) => T;
-
-export type Route<TQuery = Record<string, any>, TBody = unknown> = () => {
-  queryParser?: QueryParser<TQuery>;
-  bodyParser?: BodyParser<TBody>;
-  handler: RouteHandler<TQuery, TBody>;
-}
+export type BodyParser<T extends ZodTypeAny> = (validator: typeof z) => z.infer<T>;
 
 export interface RouteMetadata {
   pathname: string;
   method: Method;
   queryParser?: QueryParser<any>;
   bodyParser?: BodyParser<any>;
-  handler?: RouteHandler<any, any>;
+  routeHandler?: RouteHandler;
+}
+
+export interface RouteHandlerOptions<TQuery extends ZodTypeAny, TBody extends ZodTypeAny> {
+  handler: (request: Request<TQuery, TBody>) => RouteHandlerResult | Promise<RouteHandlerResult>;
+  queryParser?: (validator: typeof z) => TQuery;
+  bodyParser?: (validator: typeof z) => TBody;
 }

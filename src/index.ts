@@ -1,7 +1,4 @@
-import { parseBody, parseUrl } from './helpers';
-
-export * from './models';
-
+import { parseUrl } from './helpers';
 import { FileService } from './services/file-service';
 import { createServer as httpCreateServer, RequestListener, Server } from 'http';
 import { existsSync } from 'fs';
@@ -9,6 +6,9 @@ import { join } from 'path';
 import { blueBright, redBright, yellowBright } from 'colorette'
 import { log } from './logger';
 import { IntensoOptions, RouteMetadata, Status } from './models';
+
+export * from './models';
+export * from './create-route';
 
 export class Intenso {
 
@@ -69,51 +69,15 @@ export class Intenso {
       return;
     }
 
-    if (!routeMetadata.handler) {
+    const { routeHandler } = routeMetadata;
+    if (!routeHandler) {
       res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('Unexpected error');
       res.end();
       return;
     }
 
-    try {
-      const parsedStringBody = await parseBody(req);
-      const response = await routeMetadata.handler({
-        incomingMessage: req,
-        query: routeMetadata.queryParser ? routeMetadata.queryParser(queryParams) : queryParams,
-        body: routeMetadata.bodyParser ? routeMetadata.bodyParser(parsedStringBody) : parsedStringBody,
-      });
-
-      if ('destination' in response) {
-        let status: Status;
-        if (response.status) {
-          status = response.status;
-        } else {
-          status = response.permanent ? Status.MOVED_PERMANENTLY : Status.MOVED_TEMPORARILY;
-        }
-
-        res.writeHead(status, { Location: response.destination });
-        res.write('');
-        res.end();
-        return;
-      }
-
-      const headers: Record<string, string> = response.headers ?? {};
-      let body = response.body;
-
-      if (typeof response.body === 'object') {
-        body = JSON.stringify(response.body);
-        headers['Content-Type'] = 'application/json';
-      }
-
-      res.writeHead(response.status, headers);
-      res.write(body);
-      res.end();
-    } catch (error: any) {
-      res.writeHead(Status.INTERNAL_SERVER_ERROR);
-      res.write(error instanceof Error ? error.message : error);
-      res.end();
-    }
+    routeHandler(req, res, queryParams);
   };
 
   private async setupRoutes(): Promise<void> {
@@ -137,7 +101,7 @@ export class Intenso {
 
     for (const route of this.routes) {
       let method = route.method;
-      log(`${route.handler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
+      log(`${route.routeHandler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
     }
   }
 
@@ -146,3 +110,4 @@ export class Intenso {
 export function createServer(options?: IntensoOptions): Promise<Intenso> {
   return new Intenso(options).init();
 }
+

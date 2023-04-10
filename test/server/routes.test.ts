@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createServer, Intenso, Status } from '../../src';
+import { createRoute, createServer, Intenso, Status } from '../../src';
 import { setupTest, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
 
@@ -13,62 +13,74 @@ describe('routes', () => {
         {
           pathname: '/',
           method: 'get',
-          handler: async () => {
-            return {
-              status: 200,
-              body: 'ok from GET /'
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                status: 200,
+                body: 'ok from GET /'
+              };
+            }
+          })
         },
         {
           pathname: '/sub',
           method: 'get',
-          handler: async () => {
-            return {
-              status: 200,
-              body: 'ok from GET /sub'
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                status: 200,
+                body: 'ok from GET /sub'
+              };
+            }
+          })
         },
         {
           pathname: '/sub',
           method: 'post',
-          handler: async () => {
-            return {
-              status: 201,
-              body: 'ok from POST /sub'
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                status: 201,
+                body: 'ok from POST /sub'
+              };
+            }
+          })
         },
         {
           pathname: '/should-redirect-with-permanent',
           method: 'get',
-          handler: () => {
-            return {
-              destination: '/should-redirect-to',
-              permanent: false,
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                destination: '/should-redirect-to',
+                permanent: false,
+              };
+            }
+          })
         },
         {
           pathname: '/should-redirect-with-status',
           method: 'get',
-          handler: () => {
-            return {
-              destination: '/should-redirect-to',
-              status: Status.MOVED_TEMPORARILY
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                destination: '/should-redirect-to',
+                status: Status.MOVED_TEMPORARILY
+              };
+            }
+          })
         },
         {
           pathname: '/should-redirect-to',
           method: 'get',
-          handler: () => {
-            return {
-              status: 200,
-              body: 'ok',
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                status: 200,
+                body: 'ok',
+              };
+            }
+          })
         }
       ]
     });

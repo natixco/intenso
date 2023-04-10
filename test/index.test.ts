@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, describe, expect, it, beforeEach, vi } from 'vitest'
-import { createServer, Intenso } from '../src';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { createRoute, createServer, Intenso } from '../src';
 import { setupTest, testRequest } from '../test-helpers';
 import { Response } from 'node-fetch';
 
@@ -60,30 +60,30 @@ describe('index tests with the same server', () => {
         {
           pathname: '/route-without-handler',
           method: 'get',
-          handler: undefined
+          routeHandler: undefined
         },
         {
           pathname: '/json-response',
           method: 'get',
-          handler: async () => {
-            return {
-              status: 200,
-              body: {
-                x: 123,
-              }
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              return {
+                status: 200,
+                body: {
+                  x: 123,
+                }
+              };
+            }
+          }),
         },
         {
           pathname: '/error',
           method: 'get',
-          handler: async () => {
-            throw new Error('error :(')
-            return {
-              status: 200,
-              body: ''
-            };
-          }
+          routeHandler: createRoute({
+            handler: () => {
+              throw new Error('error :(')
+            }
+          }),
         }
       ]
     });

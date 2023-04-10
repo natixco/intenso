@@ -1,24 +1,14 @@
-import { Route } from '../../../src';
-import { Status } from '../../../src';
+import { createRoute, Status } from '../../../src';
 
-const route: Route = () => ({
-  async handler() {
+export default createRoute({
+  queryParser: z => z.object({
+    id: z.string()
+  }),
+  handler: ({ query }) => {
     return {
       status: Status.OK,
-      body: [
-        {
-          id: 1,
-          name: 'Gunnar Gunnarsson',
-          email: 'gunnar@gunnarsson.com'
-        },
-        {
-          id: 2,
-          name: 'Gunnar Gunnarssonsson',
-          email: 'gunnar@gunnarssonsson.com'
-        },
-      ]
+      body: `user id: ${query.id}`
     };
   }
 });
 
-export default route;

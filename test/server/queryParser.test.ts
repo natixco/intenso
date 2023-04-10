@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createServer, Intenso } from '../../src';
+import { createRoute, createServer, Intenso } from '../../src';
 import { setupTest, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
 
@@ -13,18 +13,17 @@ describe('queryParser', () => {
         {
           pathname: '/',
           method: 'get',
-          queryParser(query) {
-            if (query.id) {
-              query.id = Number(query.id) + 1;
+          routeHandler: createRoute({
+            queryParser: z => z.object({
+              id: z.coerce.number()
+            }),
+            handler: ({ query }) => {
+              return {
+                status: 200,
+                body: `ok from GET / id: ${query.id + 1}`
+              };
             }
-            return query;
-          },
-          handler: async ({ query }) => {
-            return {
-              status: 200,
-              body: `ok from GET / id: ${query.id}`
-            };
-          }
+          }),
         },
       ]
     });

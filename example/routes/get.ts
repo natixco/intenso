@@ -1,13 +1,10 @@
-import { Route } from '../../src';
-import { Status } from '../../src';
+import { createRoute, Status } from '../../src';
 
-const route: Route = () => ({
-  async handler(req) {
+export default createRoute({
+  handler: () => {
     return {
       status: Status.OK,
       body: 'hey!'
     };
   }
 });
-
-export default route;

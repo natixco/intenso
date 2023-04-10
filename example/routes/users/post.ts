@@ -1,21 +1,14 @@
-import { Route, Status } from '../../../src';
+import { createRoute, Status } from '../../../src';
 
-interface QuerySchema {
-  id: number;
-}
-
-const route: Route<QuerySchema> = () => ({
-  queryParser(query) {
+export default createRoute({
+  bodyParser: z => z.object({
+    name: z.string(),
+  }),
+  handler: ({ body }) => {
     return {
-      id: query.id ? Number(query.id) : -1
-    };
-  },
-  async handler({ query }) {
-    return {
-      status: Status.OK,
-      body: `id from query params: ${query.id}`,
+      status: Status.CREATED,
+      body: `user created with name: ${body.name}`
     };
   }
 });
 
-export default route;
