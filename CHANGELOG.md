@@ -1,5 +1,11 @@
 # intenso
 
+## 0.0.7
+
+### Patch Changes
+
+- 9b5a03d: refactored route creation and added zod for query and body parsing and validation
+
 ## 0.0.6
 
 ### Patch Changes
