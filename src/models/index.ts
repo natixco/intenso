@@ -15,9 +15,9 @@ export interface ParsedUrl {
   queryParams: Record<string, any>;
 }
 
-export interface Request<TQUery extends ZodTypeAny, TBody extends ZodTypeAny> {
+export interface Request<TQuery extends ZodTypeAny, TBody extends ZodTypeAny> {
   incomingMessage: IncomingMessage;
-  query: z.infer<TQUery>;
+  query: z.infer<TQuery>;
   body: z.infer<TBody>;
 }
 
@@ -45,22 +45,22 @@ export type Redirect = RedirectWithPermanent | RedirectWithStatus;
 
 export type RouteHandlerResult = Response | Redirect;
 
-export type RouteHandler = (request: IncomingMessage, res: ServerResponse & { req: IncomingMessage }, queryParams: any) => void | Promise<void>;
+export type RouteHandler = (request: IncomingMessage, res: ServerResponse & { req: IncomingMessage }, queryParams: Record<string, any>) => void | Promise<void>;
 
-export type QueryParser<T extends ZodTypeAny> = (validator: typeof z) => z.infer<T>;
+export type QueryParser<T extends ZodTypeAny> = (validator: typeof z) => T;
 
-export type BodyParser<T extends ZodTypeAny> = (validator: typeof z) => z.infer<T>;
+export type BodyParser<T extends ZodTypeAny> = (validator: typeof z) => T;
 
 export interface RouteMetadata {
   pathname: string;
   method: Method;
-  queryParser?: QueryParser<any>;
-  bodyParser?: BodyParser<any>;
+  queryParser?: QueryParser<ZodTypeAny>;
+  bodyParser?: BodyParser<ZodTypeAny>;
   routeHandler?: RouteHandler;
 }
 
 export interface RouteHandlerOptions<TQuery extends ZodTypeAny, TBody extends ZodTypeAny> {
   handler: (request: Request<TQuery, TBody>) => RouteHandlerResult | Promise<RouteHandlerResult>;
-  queryParser?: (validator: typeof z) => TQuery;
-  bodyParser?: (validator: typeof z) => TBody;
+  queryParser?: QueryParser<TQuery>;
+  bodyParser?: BodyParser<TBody>;
 }
