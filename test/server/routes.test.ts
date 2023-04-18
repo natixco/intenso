@@ -47,6 +47,35 @@ describe('routes', () => {
           })
         },
         {
+          pathname: '/organizations/[orgId]',
+          method: 'get',
+          routeHandler: createRoute({
+            handler: ({ params }) => {
+              return {
+                status: 200,
+                body: {
+                  orgId: params.orgId,
+                }
+              };
+            }
+          })
+        },
+        {
+          pathname: '/organizations/[orgId]/applications/[appId]',
+          method: 'get',
+          routeHandler: createRoute({
+            handler: ({ params }) => {
+              return {
+                status: 200,
+                body: {
+                  orgId: params.orgId,
+                  appId: params.appId,
+                }
+              };
+            }
+          })
+        },
+        {
           pathname: '/should-redirect-with-permanent',
           method: 'get',
           routeHandler: createRoute({
@@ -134,6 +163,41 @@ describe('routes', () => {
 
     it('response should have the correct body', async () => {
       expect(await res.text()).toEqual('ok from POST /sub');
+    });
+  });
+
+  describe('route: GET /organizations/[orgId]', async () => {
+    let res: Response;
+    const orgId = 123;
+
+    beforeEach(async () => {
+      res = await testRequest(port, `/organizations/${orgId}`, 'get');
+    });
+
+    it('response should have the correct status', () => {
+      expect(res.status).toEqual(200);
+    });
+
+    it('response should have the correct body', async () => {
+      expect(await res.json()).toEqual({ orgId: orgId.toString() });
+    });
+  });
+
+  describe('route: GET /organizations/[orgId]/applications/[appId]', async () => {
+    let res: Response;
+    const orgId = 123;
+    const appId = 456;
+
+    beforeEach(async () => {
+      res = await testRequest(port, `/organizations/${orgId}/applications/${appId}`, 'get');
+    });
+
+    it('response should have the correct status', () => {
+      expect(res.status).toEqual(200);
+    });
+
+    it('response should have the correct body', async () => {
+      expect(await res.json()).toEqual({ orgId: orgId.toString(), appId: appId.toString() });
     });
   });
 

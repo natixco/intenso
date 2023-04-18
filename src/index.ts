@@ -10,6 +10,11 @@ import { IntensoOptions, RouteMetadata, Status } from './models';
 export * from './models';
 export * from './create-route';
 
+interface RouteMetadataWithUrlParams {
+  metadata: RouteMetadata | undefined;
+  urlParams: Record<string, string>;
+}
+
 export class Intenso {
 
   private readonly fileService = new FileService();
@@ -60,16 +65,15 @@ export class Intenso {
 
   private listener: RequestListener = async (req, res) => {
     const { pathname, queryParams } = parseUrl(req.url);
-
-    const routeMetadata = this.routes.find(x => x.pathname === pathname && x.method.toLowerCase() === req.method?.toLowerCase());
-    if (!routeMetadata) {
+    const { metadata, urlParams } = this.getRouteMetadata(pathname, req.method ?? '');
+    if (!metadata) {
       res.writeHead(Status.NOT_FOUND);
       res.write('The requested resource does not exist');
       res.end();
       return;
     }
 
-    const { routeHandler } = routeMetadata;
+    const { routeHandler } = metadata;
     if (!routeHandler) {
       res.writeHead(Status.INTERNAL_SERVER_ERROR);
       res.write('Unexpected error');
@@ -77,8 +81,50 @@ export class Intenso {
       return;
     }
 
-    routeHandler(req, res, queryParams);
+    routeHandler(req, res, queryParams, urlParams);
   };
+
+  private getRouteMetadata(pathname: string, reqMethod: string): RouteMetadataWithUrlParams {
+    const urlParams: Record<string, string> = {};
+    let metadata: RouteMetadata | undefined = undefined;
+
+    for (const route of this.routes) {
+      if (route.pathname === pathname && route.method.toLowerCase() === reqMethod.toLowerCase()) {
+        metadata = route;
+        break;
+      }
+
+      const metadataPathnameSplit = route.pathname.split('/');
+      const reqPathnameSplit = pathname.split('/');
+      if (metadataPathnameSplit.length !== reqPathnameSplit.length) {
+        continue;
+      }
+
+      let pathnameMatches = true;
+      metadataPathnameSplit.forEach((item, i) => {
+        if (item.charAt(0) === '[' && item.charAt(item.length - 1) === ']') {
+          const paramKey = item.slice(0, item.length - 1).slice(1, item.length);
+          urlParams[paramKey] = reqPathnameSplit[i]!;
+          return;
+        }
+
+        if (item !== reqPathnameSplit[i]) {
+          pathnameMatches = false;
+          return;
+        }
+      });
+
+      if (pathnameMatches && Object.values(urlParams).length > 0) {
+        metadata = route;
+        break;
+      }
+    }
+
+    return {
+      metadata,
+      urlParams,
+    };
+  }
 
   private async setupRoutes(): Promise<void> {
     let path = this.fileService.getCurrentPath();
@@ -97,12 +143,13 @@ export class Intenso {
 
     log('Registering routes:');
 
-    this.routes = await this.fileService.findRoutes(routesPath);
+    const routes = await this.fileService.findRoutes(routesPath);
 
-    for (const route of this.routes) {
+    for (const route of routes) {
       let method = route.method;
       log(`${route.routeHandler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
     }
+    this.routes = routes.sort((a) => a.pathname.charAt(a.pathname.length - 1) === ']' ? 1 : -1);
   }
 
 }

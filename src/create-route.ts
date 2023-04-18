@@ -2,14 +2,16 @@ import { z, ZodTypeAny } from 'zod';
 import { RouteHandler, RouteHandlerOptions, Status } from './models';
 import { parseBody } from './helpers';
 
-export function createRoute<TQuery extends ZodTypeAny, TBody extends ZodTypeAny>(options: RouteHandlerOptions<TQuery, TBody>): RouteHandler {
-  return async (req, res, queryParams) => {
+export function createRoute<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny>(options: RouteHandlerOptions<TQuery, TBody, TParams>): RouteHandler {
+  return async (req, res, queryParams, urlParams) => {
     try {
+      const { handler, bodyParser, paramsParser, queryParser } = options;
       const parsedStringBody = await parseBody(req);
-      const response = await options.handler({
+      const response = await handler({
         incomingMessage: req,
-        query: options.queryParser ? options.queryParser(z).parse(queryParams) : queryParams,
-        body: options.bodyParser ? options.bodyParser(z).parse(parsedStringBody) : parsedStringBody,
+        query: queryParser ? queryParser(z).parse(queryParams) : queryParams,
+        body: bodyParser ? bodyParser(z).parse(parsedStringBody) : parsedStringBody,
+        params: paramsParser ? paramsParser(z).parse(urlParams) : urlParams,
       });
 
       if ('destination' in response) {

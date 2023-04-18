@@ -1,13 +1,13 @@
 import { createRoute, Status } from '../../../src';
 
 export default createRoute({
-  queryParser: z => z.object({
-    id: z.string()
-  }),
-  handler: ({ query }) => {
+  handler: () => {
     return {
       status: Status.OK,
-      body: `user id: ${query.id}`
+      body: [
+        'user 1',
+        'user 2',
+      ]
     };
   }
 });

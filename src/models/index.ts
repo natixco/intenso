@@ -12,13 +12,14 @@ export interface IntensoOptions {
 
 export interface ParsedUrl {
   pathname: string;
-  queryParams: Record<string, any>;
+  queryParams: Record<string, string>;
 }
 
-export interface Request<TQuery extends ZodTypeAny, TBody extends ZodTypeAny> {
+export interface Request<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny> {
   incomingMessage: IncomingMessage;
   query: z.infer<TQuery>;
   body: z.infer<TBody>;
+  params: z.infer<TParams>;
 }
 
 export interface Response {
@@ -45,22 +46,21 @@ export type Redirect = RedirectWithPermanent | RedirectWithStatus;
 
 export type RouteHandlerResult = Response | Redirect;
 
-export type RouteHandler = (request: IncomingMessage, res: ServerResponse & { req: IncomingMessage }, queryParams: Record<string, any>) => void | Promise<void>;
+export type RouteHandler = (request: IncomingMessage, res: ServerResponse & { req: IncomingMessage }, queryParams: Record<string, string>, urlParams: Record<string, string>) => void | Promise<void>;
 
-export type QueryParser<T extends ZodTypeAny> = (validator: typeof z) => T;
-
-export type BodyParser<T extends ZodTypeAny> = (validator: typeof z) => T;
+export type Parser<T extends ZodTypeAny> = (validator: typeof z) => T;
 
 export interface RouteMetadata {
   pathname: string;
   method: Method;
-  queryParser?: QueryParser<ZodTypeAny>;
-  bodyParser?: BodyParser<ZodTypeAny>;
+  queryParser?: Parser<ZodTypeAny>;
+  bodyParser?: Parser<ZodTypeAny>;
   routeHandler?: RouteHandler;
 }
 
-export interface RouteHandlerOptions<TQuery extends ZodTypeAny, TBody extends ZodTypeAny> {
-  handler: (request: Request<TQuery, TBody>) => RouteHandlerResult | Promise<RouteHandlerResult>;
-  queryParser?: QueryParser<TQuery>;
-  bodyParser?: BodyParser<TBody>;
+export interface RouteHandlerOptions<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny> {
+  handler: (request: Request<TQuery, TBody, TParams>) => RouteHandlerResult | Promise<RouteHandlerResult>;
+  queryParser?: Parser<TQuery>;
+  bodyParser?: Parser<TBody>;
+  paramsParser?: Parser<TParams>;
 }
