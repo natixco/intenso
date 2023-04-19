@@ -1,5 +1,12 @@
 # intenso
 
+## 0.0.8
+
+### Patch Changes
+
+- ed5a8a0: added env var parsing and validation
+- ed5a8a0: added url param parsing and validation
+
 ## 0.0.7
 
 ### Patch Changes
