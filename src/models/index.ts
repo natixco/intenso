@@ -8,7 +8,6 @@ export { Method } from './methods';
 
 export interface IntensoOptions<TEnv extends ZodTypeAny> {
   port: number;
-  validator?: Parser<TEnv>;
   env?: {
     path?: string;
     validator: Parser<TEnv>;
