@@ -1,5 +1,12 @@
 # intenso
 
+## 0.0.9
+
+### Patch Changes
+
+- b532832: renamed the IntensoOptions.env.validator property to "parser" and restricted its return type to ZodObject instead of ZodTypeAny
+- b532832: removed unused "validator" property from the IntensoOptions interface
+
 ## 0.0.8
 
 ### Patch Changes
