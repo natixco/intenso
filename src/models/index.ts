@@ -1,16 +1,16 @@
 import { Method } from './methods';
 import { IncomingMessage, ServerResponse } from 'http';
 import { Status } from './status-codes';
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodObject, ZodTypeAny } from 'zod';
 
 export * from './status-codes';
 export { Method } from './methods';
 
-export interface IntensoOptions<TEnv extends ZodTypeAny> {
+export interface IntensoOptions<TEnv extends ZodObject<any>> {
   port: number;
   env?: {
     path?: string;
-    validator: Parser<TEnv>;
+    parser: Parser<TEnv>;
   };
 }
 

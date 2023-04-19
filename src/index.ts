@@ -5,7 +5,7 @@ import { join } from 'path';
 import { yellowBright } from 'colorette'
 import { log } from './logger';
 import { IntensoOptions, RouteHandler, RouteHandlerOptions, RouteMetadata, Status } from './models';
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodObject, ZodTypeAny } from 'zod';
 import { config as dotenvConfig } from 'dotenv';
 
 export * from './models';
@@ -15,7 +15,7 @@ interface RouteMetadataWithUrlParams {
   urlParams: Record<string, string>;
 }
 
-export function createServer<TEnv extends ZodTypeAny>(
+export function createServer<TEnv extends ZodObject<any>>(
   options: IntensoOptions<TEnv> = {
     port: 3000,
   }
@@ -24,7 +24,7 @@ export function createServer<TEnv extends ZodTypeAny>(
   let routes: RouteMetadata[] = [];
 
   dotenvConfig({ path: options?.env?.path });
-  const envValidator = options?.env?.validator ? options.env.validator(z) : undefined;
+  const envValidator = options?.env?.parser ? options.env.parser(z) : undefined;
   const env = envValidator ? envValidator.parse(process.env) : process.env;
 
   const server = httpCreateServer(listener);
