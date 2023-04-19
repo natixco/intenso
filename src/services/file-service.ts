@@ -2,6 +2,8 @@ import { Method, RouteMetadata } from '../models';
 import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 import { methods } from '../models/methods';
+import { log } from '../logger';
+import { blueBright, redBright } from 'colorette';
 
 export class FileService {
 
@@ -18,7 +20,10 @@ export class FileService {
       if (stat.isDirectory()) {
         await this.findRoutes(fullPathToRoute, routes);
       } else {
-        routes.push(await this.registerRoute(fullPathToRoute));
+        const route = await this.registerRoute(fullPathToRoute);
+        let method = route.method;
+        log(`${route.routeHandler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
+        routes.push(route);
       }
     }
 

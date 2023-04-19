@@ -1,4 +1,5 @@
-import { createRoute, Status } from '../../../src';
+import { createRoute } from '../../index';
+import { Status } from '../../../src';
 
 export default createRoute({
   bodyParser: z => z.object({

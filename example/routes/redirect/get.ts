@@ -1,4 +1,4 @@
-import { createRoute } from '../../../src';
+import { createRoute } from '../../index';
 
 export default createRoute({
   handler: () => {

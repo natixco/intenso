@@ -1,19 +1,22 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createRoute, createServer, Intenso, Status } from '../../src';
-import { setupTest, testRequest } from '../../test-helpers';
+import { createServer, Status } from '../../src';
+import { getPort, setupTest, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
 
 describe('routes', () => {
-  let server: Intenso;
+  let server: any;
   let port: number;
 
   beforeAll(async () => {
-    port = setupTest({
+    port = getPort();
+    server = createServer({ port });
+
+    setupTest({
       routes: [
         {
           pathname: '/',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 status: 200,
@@ -25,7 +28,7 @@ describe('routes', () => {
         {
           pathname: '/sub',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 status: 200,
@@ -37,7 +40,7 @@ describe('routes', () => {
         {
           pathname: '/sub',
           method: 'post',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 status: 201,
@@ -49,8 +52,8 @@ describe('routes', () => {
         {
           pathname: '/organizations/[orgId]',
           method: 'get',
-          routeHandler: createRoute({
-            handler: ({ params }) => {
+          routeHandler: server.createRoute({
+            handler: ({ params }: any) => {
               return {
                 status: 200,
                 body: {
@@ -63,8 +66,8 @@ describe('routes', () => {
         {
           pathname: '/organizations/[orgId]/applications/[appId]',
           method: 'get',
-          routeHandler: createRoute({
-            handler: ({ params }) => {
+          routeHandler: server.createRoute({
+            handler: ({ params }: any) => {
               return {
                 status: 200,
                 body: {
@@ -78,7 +81,7 @@ describe('routes', () => {
         {
           pathname: '/should-redirect-with-permanent',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 destination: '/should-redirect-to',
@@ -90,7 +93,7 @@ describe('routes', () => {
         {
           pathname: '/should-redirect-with-status',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 destination: '/should-redirect-to',
@@ -102,7 +105,7 @@ describe('routes', () => {
         {
           pathname: '/should-redirect-to',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 status: 200,
@@ -114,7 +117,7 @@ describe('routes', () => {
       ]
     });
 
-    server = await createServer({ port });
+    server.setup();
   });
 
   afterAll(() => {

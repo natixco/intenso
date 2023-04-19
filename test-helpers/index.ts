@@ -12,10 +12,13 @@ interface SetupOptions {
 
 const defaultPort = 8080;
 
-export function setupTest(options?: SetupOptions): number {
+export function getPort(): number {
+  return defaultPort + Number(process.env.VITEST_WORKER_ID ?? 0);
+}
+
+export function setupTest(options?: SetupOptions): void {
   mockFs();
   mockFileService(options ?? {});
-  return defaultPort + Number(process.env.VITEST_WORKER_ID ?? 0);
 }
 
 export function testRequest(port: number, path: string, method: Method, body: BodyInit | null | undefined = undefined): Promise<Response> {

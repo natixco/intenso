@@ -1,23 +1,26 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createRoute, createServer, Intenso } from '../../src';
-import { setupTest, testRequest } from '../../test-helpers';
+import { createServer } from '../../src';
+import { getPort, setupTest, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
 
 describe('queryParser', () => {
-  let server: Intenso;
+  let server: any;
   let port: number;
 
   beforeAll(async () => {
-    port = setupTest({
+    port = getPort();
+    server = createServer({ port });
+
+    setupTest({
       routes: [
         {
           pathname: '/[id]',
           method: 'get',
-          routeHandler: createRoute({
-            paramsParser: z => z.object({
+          routeHandler: server.createRoute({
+            paramsParser: (z: any) => z.object({
               id: z.coerce.number()
             }),
-            handler: ({ params }) => {
+            handler: ({ params }: any) => {
               return {
                 status: 200,
                 body: `ok from GET /[id]: ${params.id + 1}`
@@ -28,7 +31,7 @@ describe('queryParser', () => {
       ]
     });
 
-    server = await createServer({ port });
+    server.setup();
   });
 
   afterAll(() => {

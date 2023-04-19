@@ -1,15 +1,17 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createRoute, createServer, Intenso } from '../src';
-import { setupTest, testRequest } from '../test-helpers';
+import { createServer } from '../src';
+import { getPort, setupTest, testRequest } from '../test-helpers';
 import { Response } from 'node-fetch';
 
 describe('when the server is successfully created', () => {
-  let server: Intenso;
+  let server: any;
   let port: number;
 
   beforeAll(async () => {
-    port = setupTest();
-    server = await createServer({ port });
+    port = getPort();
+    setupTest();
+    server = createServer({ port });
+    server.setup();
   });
 
   afterAll(() => {
@@ -19,43 +21,17 @@ describe('when the server is successfully created', () => {
   it('should create the server', () => {
     expect(server).toBeTruthy();
   });
-
-  describe('when server.init() is called', () => {
-    let _server: Intenso;
-    beforeEach(async () => {
-      _server = await server.init();
-    });
-
-    it('should return the same server instance', () => {
-      expect(_server).toEqual(server);
-    });
-  });
-});
-
-describe('when createServer() is called without a port', () => {
-  let server: Intenso;
-  let port: number;
-
-  beforeAll(async () => {
-    port = setupTest();
-    server = await createServer();
-  });
-
-  afterAll(() => {
-    server.close();
-  });
-
-  it('should start with the default port 3000', async () => {
-    expect(server.port).toEqual(3000);
-  });
 });
 
 describe('index tests with the same server', () => {
-  let server: Intenso;
+  let server: any;
   let port: number;
 
   beforeAll(async () => {
-    port = setupTest({
+    port = getPort();
+    server = createServer({ port });
+
+    setupTest({
       routes: [
         {
           pathname: '/route-without-handler',
@@ -65,7 +41,7 @@ describe('index tests with the same server', () => {
         {
           pathname: '/json-response',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               return {
                 status: 200,
@@ -79,7 +55,7 @@ describe('index tests with the same server', () => {
         {
           pathname: '/error',
           method: 'get',
-          routeHandler: createRoute({
+          routeHandler: server.createRoute({
             handler: () => {
               throw new Error('error :(')
             }
@@ -87,7 +63,8 @@ describe('index tests with the same server', () => {
         }
       ]
     });
-    server = await createServer({ port });
+
+    server.setup();
   });
 
   afterAll(() => {

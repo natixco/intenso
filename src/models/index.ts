@@ -6,8 +6,13 @@ import { z, ZodTypeAny } from 'zod';
 export * from './status-codes';
 export { Method } from './methods';
 
-export interface IntensoOptions {
+export interface IntensoOptions<TEnv extends ZodTypeAny> {
   port: number;
+  validator?: Parser<TEnv>;
+  env?: {
+    path?: string;
+    validator: Parser<TEnv>;
+  };
 }
 
 export interface ParsedUrl {
@@ -15,11 +20,12 @@ export interface ParsedUrl {
   queryParams: Record<string, string>;
 }
 
-export interface Request<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny> {
+export interface Request<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny, TEnv extends ZodTypeAny> {
   incomingMessage: IncomingMessage;
   query: z.infer<TQuery>;
   body: z.infer<TBody>;
   params: z.infer<TParams>;
+  env: z.infer<TEnv>;
 }
 
 export interface Response {
@@ -46,20 +52,25 @@ export type Redirect = RedirectWithPermanent | RedirectWithStatus;
 
 export type RouteHandlerResult = Response | Redirect;
 
-export type RouteHandler = (request: IncomingMessage, res: ServerResponse & { req: IncomingMessage }, queryParams: Record<string, string>, urlParams: Record<string, string>) => void | Promise<void>;
+export type RouteHandler<T extends ZodTypeAny> = (
+  request: IncomingMessage,
+  res: ServerResponse & { req: IncomingMessage },
+  queryParams: Record<string, string>,
+  urlParams: Record<string, string>,
+) => void | Promise<void>;
 
 export type Parser<T extends ZodTypeAny> = (validator: typeof z) => T;
 
-export interface RouteMetadata {
+export interface RouteMetadata<TEnv extends ZodTypeAny = any> {
   pathname: string;
   method: Method;
   queryParser?: Parser<ZodTypeAny>;
   bodyParser?: Parser<ZodTypeAny>;
-  routeHandler?: RouteHandler;
+  routeHandler?: RouteHandler<TEnv>;
 }
 
-export interface RouteHandlerOptions<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny> {
-  handler: (request: Request<TQuery, TBody, TParams>) => RouteHandlerResult | Promise<RouteHandlerResult>;
+export interface RouteHandlerOptions<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny, TEnv extends ZodTypeAny> {
+  handler: (request: Request<TQuery, TBody, TParams, TEnv>) => RouteHandlerResult | Promise<RouteHandlerResult>;
   queryParser?: Parser<TQuery>;
   bodyParser?: Parser<TBody>;
   paramsParser?: Parser<TParams>;

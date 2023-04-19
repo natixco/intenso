@@ -1,71 +1,48 @@
-import { parseUrl } from './helpers';
+import { parseBody, parseUrl } from './helpers';
 import { FileService } from './services/file-service';
-import { createServer as httpCreateServer, RequestListener, Server } from 'http';
+import { createServer as httpCreateServer, IncomingMessage, ServerResponse } from 'http';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { blueBright, redBright, yellowBright } from 'colorette'
+import { yellowBright } from 'colorette'
 import { log } from './logger';
-import { IntensoOptions, RouteMetadata, Status } from './models';
+import { IntensoOptions, RouteHandler, RouteHandlerOptions, RouteMetadata, Status } from './models';
+import { z, ZodTypeAny } from 'zod';
+import { config as dotenvConfig } from 'dotenv';
 
 export * from './models';
-export * from './create-route';
 
 interface RouteMetadataWithUrlParams {
-  metadata: RouteMetadata | undefined;
+  metadata: RouteMetadata<ZodTypeAny> | undefined;
   urlParams: Record<string, string>;
 }
 
-export class Intenso {
+export function createServer<TEnv extends ZodTypeAny>(
+  options: IntensoOptions<TEnv> = {
+    port: 3000,
+  }
+) {
+  const fileService = new FileService();
+  let routes: RouteMetadata[] = [];
 
-  private readonly fileService = new FileService();
+  dotenvConfig({ path: options?.env?.path });
+  const envValidator = options?.env?.validator ? options.env.validator(z) : undefined;
+  const env = envValidator ? envValidator.parse(process.env) : process.env;
 
-  private server?: Server;
-  private options: IntensoOptions;
-  private routes: RouteMetadata[] = [];
+  const server = httpCreateServer(listener);
+  server.on('close', () => {
+    log('Closing...');
+  });
+  server.listen(options.port, () => {
+    log(`Listening on :${yellowBright(options.port)}`);
+  });
 
-  constructor(options?: IntensoOptions) {
-    this.options = options ?? {
-      port: Number(process.env.PORT) || 3000,
-    };
+  function close(): void {
+    server?.close();
   }
 
-  get port(): number {
-    return this.options.port;
-  }
-
-  init(): Promise<Intenso> {
-    if (this.server) {
-      return Promise.resolve(this);
-    }
-
-    return new Promise(async (resolve, reject) => {
-      try {
-        await this.setupRoutes();
-      } catch (error) {
-        reject(error);
-      }
-
-      this.server = httpCreateServer(this.listener);
-
-      this.server.on('close', function () {
-        log('Closing...');
-      });
-
-      this.server.listen(this.options.port, () => {
-        log(`Listening on :${yellowBright(this.options.port)}`);
-      });
-
-      resolve(this);
-    });
-  }
-
-  close() {
-    this.server?.close();
-  }
-
-  private listener: RequestListener = async (req, res) => {
+  async function listener(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const { pathname, queryParams } = parseUrl(req.url);
-    const { metadata, urlParams } = this.getRouteMetadata(pathname, req.method ?? '');
+    const { metadata, urlParams } = getRouteMetadata(pathname, req.method ?? '');
     if (!metadata) {
       res.writeHead(Status.NOT_FOUND);
       res.write('The requested resource does not exist');
@@ -82,13 +59,13 @@ export class Intenso {
     }
 
     routeHandler(req, res, queryParams, urlParams);
-  };
+  }
 
-  private getRouteMetadata(pathname: string, reqMethod: string): RouteMetadataWithUrlParams {
+  function getRouteMetadata(pathname: string, reqMethod: string): RouteMetadataWithUrlParams {
     const urlParams: Record<string, string> = {};
     let metadata: RouteMetadata | undefined = undefined;
 
-    for (const route of this.routes) {
+    for (const route of routes) {
       if (route.pathname === pathname && route.method.toLowerCase() === reqMethod.toLowerCase()) {
         metadata = route;
         break;
@@ -126,8 +103,8 @@ export class Intenso {
     };
   }
 
-  private async setupRoutes(): Promise<void> {
-    let path = this.fileService.getCurrentPath();
+  async function setup(): Promise<void> {
+    let path = fileService.getCurrentPath();
     if (!path) {
       throw new Error('Can not register routes due to missing path');
     }
@@ -143,18 +120,62 @@ export class Intenso {
 
     log('Registering routes:');
 
-    const routes = await this.fileService.findRoutes(routesPath);
-
-    for (const route of routes) {
-      let method = route.method;
-      log(`${route.routeHandler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
-    }
-    this.routes = routes.sort((a) => a.pathname.charAt(a.pathname.length - 1) === ']' ? 1 : -1);
+    routes = await fileService.findRoutes(routesPath);
+    routes = routes.sort((a) => a.pathname.charAt(a.pathname.length - 1) === ']' ? 1 : -1);
   }
 
-}
+  function createRoute<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny>(routeHandlerOptions: RouteHandlerOptions<TQuery, TBody, TParams, TEnv>): RouteHandler<TEnv> {
+    return async (req, res, queryParams, urlParams) => {
+      try {
+        const { handler, bodyParser, paramsParser, queryParser } = routeHandlerOptions;
+        const parsedStringBody = await parseBody(req);
 
-export function createServer(options?: IntensoOptions): Promise<Intenso> {
-  return new Intenso(options).init();
-}
+        const response = await handler({
+          incomingMessage: req,
+          query: queryParser ? queryParser(z).parse(queryParams) : queryParams,
+          body: bodyParser ? bodyParser(z).parse(parsedStringBody) : parsedStringBody,
+          params: paramsParser ? paramsParser(z).parse(urlParams) : urlParams,
+          env,
+        });
 
+        if ('destination' in response) {
+          let status: Status;
+          if (response.status) {
+            status = response.status;
+          } else {
+            status = response.permanent ? Status.MOVED_PERMANENTLY : Status.MOVED_TEMPORARILY;
+          }
+
+          res.writeHead(status, { Location: response.destination });
+          res.write('');
+          res.end();
+          return;
+        }
+
+        const headers: Record<string, string> = response.headers ?? {};
+        let body = response.body;
+
+        if (typeof response.body === 'object') {
+          body = JSON.stringify(response.body);
+          headers['Content-Type'] = 'application/json';
+        }
+
+        res.writeHead(response.status, headers);
+        res.write(body);
+        res.end();
+      } catch (error: any) {
+        res.writeHead(Status.INTERNAL_SERVER_ERROR);
+        res.write(error instanceof Error ? error.message : error);
+        res.end();
+      }
+    };
+  }
+
+  return {
+    setup,
+    close,
+    createRoute,
+    // @ts-ignore
+    env: env as z.infer<NonNullable<typeof envValidator>>,
+  }
+}
