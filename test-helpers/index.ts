@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import { FileService } from '../src/services/file-service';
 import { Method, RouteMetadata } from '../src';
 import fetch, { BodyInit, Response } from 'node-fetch';
+import * as fileHelpers from '../src/helpers';
 
 interface SetupOptions {
   routes?: RouteMetadata[];
@@ -50,10 +50,10 @@ function mockFs() {
 
 function mockFileService(options: SetupOptions) {
   if (options?.toMock?.fileServiceFindRoutes ?? true) {
-    vi.spyOn(FileService.prototype, 'findRoutes').mockReturnValue(Promise.resolve<RouteMetadata[]>(options?.routes ?? []));
+    vi.spyOn(fileHelpers, 'findRoutes').mockReturnValue(Promise.resolve<RouteMetadata[]>(options?.routes ?? []));
   }
 
-  vi.spyOn(FileService.prototype, 'getCurrentPath').mockImplementation(() => 'routes');
+  vi.spyOn(fileHelpers, 'getCurrentPath').mockReturnValue('routes');
 
-  vi.spyOn(FileService.prototype as any, 'loadHandler').mockReturnValue(Promise.resolve<any>(null));
+  vi.spyOn(fileHelpers, 'loadHandler').mockReturnValue(Promise.resolve<any>(null));
 }

@@ -1,6 +1,8 @@
 import { ParsedUrl } from '../models';
 import { IncomingMessage } from 'http';
 
+export * from './file-helpers';
+
 export function parseUrl(url: string = ''): ParsedUrl {
   const splitUrl = url.split('?');
 

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createServer } from '../../../src';
 import { getPort, setupTest } from '../../../test-helpers';
-import { FileService } from '../../../src/services/file-service';
+import * as fileHelpers from '../../../src/helpers';
 
 describe('when createServer() throws an error', () => {
   let server: any;
@@ -11,7 +11,7 @@ describe('when createServer() throws an error', () => {
     port = getPort();
     setupTest();
     server = createServer({ port });
-    vi.spyOn(FileService.prototype, 'getCurrentPath').mockImplementation(() => '');
+    vi.spyOn(fileHelpers, 'getCurrentPath').mockReturnValue('');
   });
 
   it('should throw error due to missing path', async () => {

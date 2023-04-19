@@ -1,5 +1,4 @@
-import { parseBody, parseUrl } from './helpers';
-import { FileService } from './services/file-service';
+import { findRoutes, getCurrentPath, parseBody, parseUrl } from './helpers';
 import { createServer as httpCreateServer, IncomingMessage, ServerResponse } from 'http';
 import { existsSync } from 'fs';
 import { join } from 'path';
@@ -21,7 +20,7 @@ export function createServer<TEnv extends ZodTypeAny>(
     port: 3000,
   }
 ) {
-  const fileService = new FileService();
+
   let routes: RouteMetadata[] = [];
 
   dotenvConfig({ path: options?.env?.path });
@@ -104,7 +103,7 @@ export function createServer<TEnv extends ZodTypeAny>(
   }
 
   async function setup(): Promise<void> {
-    let path = fileService.getCurrentPath();
+    let path = getCurrentPath();
     if (!path) {
       throw new Error('Can not register routes due to missing path');
     }
@@ -120,7 +119,7 @@ export function createServer<TEnv extends ZodTypeAny>(
 
     log('Registering routes:');
 
-    routes = await fileService.findRoutes(routesPath);
+    routes = await findRoutes(routesPath);
     routes = routes.sort((a) => a.pathname.charAt(a.pathname.length - 1) === ']' ? 1 : -1);
   }
 
