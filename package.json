@@ -3,7 +3,7 @@
   "description": "yet another blazing fast web framework",
   "author": "natixco",
   "license": "MIT",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/natixco/intenso.git"
