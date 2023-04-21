@@ -1,8 +1,6 @@
 import { Method, RouteMetadata } from '../models';
 import { readdirSync, statSync } from 'fs';
 import { join, sep } from 'path';
-import { log } from '../logger';
-import { blueBright, redBright } from 'colorette';
 import { methods } from '../models/methods';
 
 export function getCurrentPath(): string | undefined {
@@ -17,18 +15,35 @@ export function getCurrentPath(): string | undefined {
   return filenameSplit.join(sep);
 }
 
-export async function findRoutes(path: string, routes: RouteMetadata[] = []): Promise<RouteMetadata[]> {
-  const files = readdirSync(path);
+export async function findRoutes(path: string): Promise<RouteMetadata[]> {
+  let routes = await internalFindRoutes(path);
+
+  routes = routes.sort((a,b) => {
+    const splitA = a.pathname.split('/');
+    const splitB = b.pathname.split('/');
+
+    const firstA = splitA[1] ?? '';
+    const firstB = splitB[1] ?? '';
+
+    return firstA.length < firstB.length ? -1 : (firstA.length > firstB.length ? 1 : 0);
+  });
+
+  return routes;
+}
+
+async function internalFindRoutes(path: string, routes: RouteMetadata[] = []): Promise<RouteMetadata[]> {
+  let files = readdirSync(path);
+  files = files.sort((a,b) => {
+    return b.includes('[') && b.includes(']') ? -1 : (a.includes(b) || a.length >= b.length ? -1 : 1);
+  });
 
   for (const file of files) {
     const fullPathToRoute = join(path, file);
     const stat = statSync(fullPathToRoute);
     if (stat.isDirectory()) {
-      await findRoutes(fullPathToRoute, routes);
+      await internalFindRoutes(fullPathToRoute, routes);
     } else {
       const route = await registerRoute(fullPathToRoute);
-      let method = route.method;
-      log(`${route.routeHandler ? '' : `${redBright('Missing handler')} - `}${blueBright(method.toUpperCase())} ${route.pathname}`);
       routes.push(route);
     }
   }

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, SpyInstance, vi } from 'vitest';
-import { log } from '../src/logger';
 import { yellowBright } from 'colorette';
 import { mockConsole } from '../test-helpers';
+import { log } from '../src/helpers';
 
 describe('log()', () => {
   let spy: SpyInstance;

@@ -1,9 +1,8 @@
-import { findRoutes, getCurrentPath, parseBody, parseUrl } from './helpers';
+import { findRoutes, getCurrentPath, log, logRoutes, parseBody, parseUrl } from './helpers';
 import { createServer as httpCreateServer, IncomingMessage, ServerResponse } from 'http';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { yellowBright } from 'colorette'
-import { log } from './logger';
 import { IntensoOptions, RouteHandler, RouteHandlerOptions, RouteMetadata, Status } from './models';
 import { z, ZodObject, ZodTypeAny } from 'zod';
 import { config as dotenvConfig } from 'dotenv';
@@ -116,7 +115,7 @@ export function createServer<TEnv extends ZodObject<any>>(
     log('Registering routes:');
 
     routes = await findRoutes(routesPath);
-    routes = routes.sort((a) => a.pathname.charAt(a.pathname.length - 1) === ']' ? 1 : -1);
+    logRoutes(routes);
   }
 
   function createRoute<TQuery extends ZodTypeAny, TBody extends ZodTypeAny, TParams extends ZodTypeAny>(routeHandlerOptions: RouteHandlerOptions<TQuery, TBody, TParams, TEnv>): RouteHandler<TEnv> {

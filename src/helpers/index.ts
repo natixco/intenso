@@ -1,5 +1,7 @@
-import { ParsedUrl } from '../models';
+import { ParsedUrl, RouteMetadata } from '../models';
 import { IncomingMessage } from 'http';
+import { redBright, yellowBright } from 'colorette';
+import { methodColors } from '../models/methods';
 
 export * from './file-helpers';
 
@@ -39,4 +41,23 @@ export async function parseBody(incomingMessage: IncomingMessage): Promise<strin
   }
 
   return body;
+}
+
+export function log(text: string): void {
+  console.log(yellowBright('[intenso] ') + text);
+}
+
+export function logRoutes(routes: RouteMetadata[]): void {
+  for (const route of routes) {
+    const method = route.method;
+
+    let text = '';
+    if (!route.routeHandler) {
+      text += redBright('Missing handler') + ' - ';
+    }
+    text += methodColors[method](method.toUpperCase()) + ' ';
+    text += route.pathname;
+
+    log(text);
+  }
 }
