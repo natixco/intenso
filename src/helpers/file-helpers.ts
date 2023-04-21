@@ -1,12 +1,20 @@
 import { Method, RouteMetadata } from '../models';
 import { readdirSync, statSync } from 'fs';
-import { join } from 'path';
+import { join, sep } from 'path';
 import { log } from '../logger';
 import { blueBright, redBright } from 'colorette';
 import { methods } from '../models/methods';
 
 export function getCurrentPath(): string | undefined {
-  return require.main?.filename;
+  let filename = require.main?.filename;
+  if (!filename) {
+    return undefined;
+  }
+
+  const filenameSplit = filename.split(sep);
+  filenameSplit.pop();
+
+  return filenameSplit.join(sep);
 }
 
 export async function findRoutes(path: string, routes: RouteMetadata[] = []): Promise<RouteMetadata[]> {
@@ -29,7 +37,7 @@ export async function findRoutes(path: string, routes: RouteMetadata[] = []): Pr
 }
 
 async function registerRoute(path: string): Promise<RouteMetadata> {
-  const split = path.split('\\');
+  const split = path.split(sep);
   let splitPathname = [];
 
   let current = path;

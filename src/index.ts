@@ -108,10 +108,6 @@ export function createServer<TEnv extends ZodObject<any>>(
       throw new Error('Can not register routes due to missing path');
     }
 
-    const filenameSplit = path.split('\\');
-    filenameSplit.pop();
-    path = filenameSplit.join('\\');
-
     const routesPath = join(path, 'routes');
     if (!existsSync(routesPath)) {
       throw new Error('`routes` directory does not exist');
