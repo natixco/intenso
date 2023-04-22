@@ -1,7 +1,26 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createServer } from '../src';
-import { getPort, setupTest, testRequest } from '../test-helpers';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createServer, RouteMetadata } from '../src';
+import { getPort, testRequest } from '../test-helpers';
 import { Response } from 'node-fetch';
+import * as fileHelpers from '../src/helpers';
+
+const mock = require('mock-require')
+
+mock('routes\\routes\\get.ts', { default: undefined });
+
+vi.mock('fs', async () => {
+  return {
+    ...(await vi.importActual<typeof import('fs')>('fs')),
+    existsSync: vi.fn().mockReturnValue(true),
+    readdirSync: vi.fn().mockReturnValue(['get.ts']),
+    statSync: vi.fn().mockReturnValue({
+      isDirectory() {
+        return false;
+      }
+    })
+  };
+});
+vi.spyOn(fileHelpers, 'getCurrentPath').mockReturnValue('routes');
 
 describe('when the server is successfully created', () => {
   let server: any;
@@ -9,7 +28,6 @@ describe('when the server is successfully created', () => {
 
   beforeAll(async () => {
     port = getPort();
-    setupTest();
     server = createServer({ port });
     server.setup();
   });
@@ -31,38 +49,37 @@ describe('index tests with the same server', () => {
     port = getPort();
     server = createServer({ port });
 
-    setupTest({
-      routes: [
-        {
-          pathname: '/route-without-handler',
-          method: 'get',
-          routeHandler: undefined
-        },
-        {
-          pathname: '/json-response',
-          method: 'get',
-          routeHandler: server.createRoute({
-            handler: () => {
-              return {
-                status: 200,
-                body: {
-                  x: 123,
-                }
-              };
-            }
-          }),
-        },
-        {
-          pathname: '/error',
-          method: 'get',
-          routeHandler: server.createRoute({
-            handler: () => {
-              throw new Error('error :(')
-            }
-          }),
-        }
-      ]
-    });
+    const routes: RouteMetadata[] = [
+      {
+        pathname: '/route-without-handler',
+        method: 'get',
+        routeHandler: undefined
+      },
+      {
+        pathname: '/json-response',
+        method: 'get',
+        routeHandler: server.createRoute({
+          handler: () => {
+            return {
+              status: 200,
+              body: {
+                x: 123,
+              }
+            };
+          }
+        }),
+      },
+      {
+        pathname: '/error',
+        method: 'get',
+        routeHandler: server.createRoute({
+          handler: () => {
+            throw new Error('error :(')
+          }
+        }),
+      }
+    ];
+    vi.spyOn(fileHelpers, 'findRoutes').mockReturnValue(Promise.resolve<RouteMetadata[]>(routes));
 
     server.setup();
   });

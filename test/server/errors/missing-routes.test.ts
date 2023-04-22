@@ -1,6 +1,14 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createServer } from '../../../src';
-import { getPort, setupTest } from '../../../test-helpers';
+import { getPort } from '../../../test-helpers';
+import * as fileHelpers from '../../../src/helpers';
+
+vi.mock('fs', async () => {
+  return {
+    existsSync: vi.fn().mockReturnValue(false),
+  };
+});
+vi.spyOn(fileHelpers, 'getCurrentPath').mockReturnValue('routes');
 
 describe('when createServer() throws an error', () => {
   let server: any;
@@ -8,13 +16,7 @@ describe('when createServer() throws an error', () => {
 
   beforeAll(async () => {
     port = getPort();
-    setupTest();
     server = createServer({ port });
-    vi.mock('fs', async () => {
-      return {
-        existsSync: vi.fn().mockReturnValue(false),
-      };
-    });
   });
 
   it('should throw error due to missing routes directory', async () => {

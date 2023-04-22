@@ -1,7 +1,15 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { createServer } from '../../src';
-import { getPort, setupTest, testRequest } from '../../test-helpers';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createServer, RouteMetadata } from '../../src';
+import { getPort, testRequest } from '../../test-helpers';
 import { Response } from 'node-fetch';
+import * as fileHelpers from '../../src/helpers';
+
+vi.mock('fs', async () => {
+  return {
+    existsSync: vi.fn().mockReturnValue(true),
+  };
+});
+vi.spyOn(fileHelpers, 'getCurrentPath').mockReturnValue('routes');
 
 describe('queryParser', () => {
   let server: any;
@@ -11,25 +19,24 @@ describe('queryParser', () => {
     port = getPort();
     server = createServer({ port });
 
-    setupTest({
-      routes: [
-        {
-          pathname: '/',
-          method: 'get',
-          routeHandler: server.createRoute({
-            queryParser: (z: any) => z.object({
-              id: z.coerce.number()
-            }),
-            handler: ({ query }: any) => {
-              return {
-                status: 200,
-                body: `ok from GET / id: ${query.id + 1}`
-              };
-            }
+    const routes: RouteMetadata[] = [
+      {
+        pathname: '/',
+        method: 'get',
+        routeHandler: server.createRoute({
+          queryParser: (z: any) => z.object({
+            id: z.coerce.number()
           }),
-        },
-      ]
-    });
+          handler: ({ query }: any) => {
+            return {
+              status: 200,
+              body: `ok from GET / id: ${query.id + 1}`
+            };
+          }
+        }),
+      },
+    ];
+    vi.spyOn(fileHelpers, 'findRoutes').mockReturnValue(Promise.resolve<RouteMetadata[]>(routes));
 
     server.setup();
   });

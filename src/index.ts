@@ -75,21 +75,14 @@ export function createServer<TEnv extends ZodObject<any>>(
         continue;
       }
 
-      let pathnameMatches = true;
       metadataPathnameSplit.forEach((item, i) => {
         if (item.charAt(0) === '[' && item.charAt(item.length - 1) === ']') {
           const paramKey = item.slice(0, item.length - 1).slice(1, item.length);
           urlParams[paramKey] = reqPathnameSplit[i]!;
-          return;
-        }
-
-        if (item !== reqPathnameSplit[i]) {
-          pathnameMatches = false;
-          return;
         }
       });
 
-      if (pathnameMatches && Object.values(urlParams).length > 0) {
+      if (Object.values(urlParams).length > 0) {
         metadata = route;
         break;
       }

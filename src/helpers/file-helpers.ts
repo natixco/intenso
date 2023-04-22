@@ -19,13 +19,7 @@ export async function findRoutes(path: string): Promise<RouteMetadata[]> {
   let routes = await internalFindRoutes(path);
 
   routes = routes.sort((a,b) => {
-    const splitA = a.pathname.split('/');
-    const splitB = b.pathname.split('/');
-
-    const firstA = splitA[1] ?? '';
-    const firstB = splitB[1] ?? '';
-
-    return firstA.length < firstB.length ? -1 : (firstA.length > firstB.length ? 1 : 0);
+    return b.pathname.includes('[') && b.pathname.includes(']') ? -1 : 1;
   });
 
   return routes;
@@ -33,9 +27,6 @@ export async function findRoutes(path: string): Promise<RouteMetadata[]> {
 
 async function internalFindRoutes(path: string, routes: RouteMetadata[] = []): Promise<RouteMetadata[]> {
   let files = readdirSync(path);
-  files = files.sort((a,b) => {
-    return b.includes('[') && b.includes(']') ? -1 : (a.includes(b) || a.length >= b.length ? -1 : 1);
-  });
 
   for (const file of files) {
     const fullPathToRoute = join(path, file);
@@ -89,7 +80,7 @@ async function registerRoute(path: string): Promise<RouteMetadata> {
   };
 }
 
-export async function loadHandler(path: string) {
+async function loadHandler(path: string) {
   let handler;
   if (typeof require !== 'undefined' && typeof __dirname !== 'undefined') {
     handler = require(path);
