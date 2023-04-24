@@ -1,5 +1,12 @@
 # intenso
 
+## 0.0.10
+
+### Patch Changes
+
+- a4d17dc: fixed route sorting
+- a4d17dc: fixed path separators when loading routes, previously only worked on windows
+
 ## 0.0.9
 
 ### Patch Changes
